@@ -11,6 +11,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: "recursive"
+          repository: "https://github.com/aseprite/aseprite"
 
       - name: Setup MSVC Environment
         uses: ilammy/msvc-dev-cmd@v1
@@ -18,9 +19,9 @@ jobs:
           arch: x64
 
       - name: Install Visual Studio Components
-        uses: thepwrtank18/install-vs-components@main
+        uses: GuillaumeFalourd/setup-windows10-sdk-action@v2
         with:
-          components: Microsoft.VisualStudio.Component.WinXP,Microsoft.Net.Component.4.6.2.TargetingPack
+          sdk-version: 18362
 
       - name: Setup Ninja Build System
         uses: ashutoshvarma/setup-ninja@master
