@@ -1,0 +1,53 @@
+name: Aseprite Windows Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch:
+          - x64
+          - x86
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: Setup MSVC Environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.arch }}
+          vsversion: 17.0 # For Visual Studio 2022, adjust as needed
+
+      - name: Setup Ninja
+        uses: ashutoshvarma/setup-ninja@master
+        with:
+          version: "1.10.0"
+
+      - name: Configure CMake
+        run: cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLAF_BACKEND=skia -DSKIA_DIR=C:\deps\skia -DSKIA_LIBRARY_DIR=C:\deps\skia\out\Release-${{ matrix.arch }} -DSKIA_LIBRARY=C:\deps\skia\out\Release-${{ matrix.arch }}\skia.lib
+
+      - name: Build Aseprite
+        run: cmake --build build
+
+      - name: Upload Aseprite Executable
+        uses: actions/upload-artifact@v3
+        with:
+          name: aseprite-${{ matrix.arch }}
+          path: build/bin/aseprite.exe
+
+      - name: Create Release
+        if: github.ref == 'refs/heads/master' && matrix.arch == 'x64'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          body: "Automatically generated Aseprite release for Windows."
+          draft: false
+          prerelease: false
